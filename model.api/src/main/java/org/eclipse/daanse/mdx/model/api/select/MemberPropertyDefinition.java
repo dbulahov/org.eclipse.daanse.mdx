@@ -18,8 +18,8 @@ import org.eclipse.daanse.mdx.model.api.expression.ObjectIdentifier;
 
 public interface MemberPropertyDefinition {
 
-    ObjectIdentifier objectIdentifier();
-
     MdxExpression expression();
+
+    ObjectIdentifier objectIdentifier();
 
 }

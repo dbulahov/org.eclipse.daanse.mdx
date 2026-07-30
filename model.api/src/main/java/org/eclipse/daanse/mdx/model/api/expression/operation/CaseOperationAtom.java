@@ -13,6 +13,8 @@
 */
 package org.eclipse.daanse.mdx.model.api.expression.operation;
 
+import java.util.Objects;
+
 /**
  * Defines a Case-Operation.
  *
@@ -22,5 +24,10 @@ package org.eclipse.daanse.mdx.model.api.expression.operation;
  * </ul>
  */
 public record CaseOperationAtom(String name) implements OperationAtom {
+
+    public CaseOperationAtom {
+        Objects.requireNonNull(name, "name must not be null");
+    }
+
 
 }

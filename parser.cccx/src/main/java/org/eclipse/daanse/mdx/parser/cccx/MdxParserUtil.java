@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2023 Contributors to the Eclipse Foundation.
- *
- * This program and the accompanying materials are made
- * available under the terms of the Eclipse Public License 2.0
- * which is available at https://www.eclipse.org/legal/epl-2.0/
- *
- * SPDX-License-Identifier: EPL-2.0
- *
- * Contributors:
- *   SmartCity Jena - initial
- *   Stefan Bischof (bipolis.org) - initial
- */
+* Copyright (c) 2023 Contributors to the Eclipse Foundation.
+*
+* This program and the accompanying materials are made
+* available under the terms of the Eclipse Public License 2.0
+* which is available at https://www.eclipse.org/legal/epl-2.0/
+*
+* SPDX-License-Identifier: EPL-2.0
+*
+* Contributors:
+*   SmartCity Jena - initial
+*   Stefan Bischof (bipolis.org) - initial
+*/
 package org.eclipse.daanse.mdx.parser.cccx;
 
 import java.util.ArrayList;
@@ -111,9 +111,9 @@ public class MdxParserUtil {
                 logger.debug("Successfully parsed string literal expression");
                 return result;
             } catch (Exception e) {
-                logger.error("Failed to parse string literal expression: '{}'", stringLiteral.value(), e);
+                logger.debug("Failed to parse string literal expression: '{}'", stringLiteral.value(), e);
                 e.printStackTrace();
-                //throw new ParseException("Failed to parse string literal expression: '" + stringLiteral.value() + "'");
+                //we should return expression as is return expression
             }
         }
         return expression;

@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2023 Contributors to the Eclipse Foundation.
- *
- * This program and the accompanying materials are made
- * available under the terms of the Eclipse Public License 2.0
- * which is available at https://www.eclipse.org/legal/epl-2.0/
- *
- * SPDX-License-Identifier: EPL-2.0
- *
- * Contributors:
- *   SmartCity Jena - initial
- *   Stefan Bischof (bipolis.org) - initial
- */
+* Copyright (c) 2023 Contributors to the Eclipse Foundation.
+*
+* This program and the accompanying materials are made
+* available under the terms of the Eclipse Public License 2.0
+* which is available at https://www.eclipse.org/legal/epl-2.0/
+*
+* SPDX-License-Identifier: EPL-2.0
+*
+* Contributors:
+*   SmartCity Jena - initial
+*   Stefan Bischof (bipolis.org) - initial
+*/
 package org.eclipse.daanse.mdx.parser.tck;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -495,14 +495,14 @@ class SelectStatementTest {
                 WITH
                 MEMBER [Measures].[Measures].[Profit]
                 AS '[Measures].[Store Sales] - [Measures].[Store Cost]',
-                FORMAT_STRING = "$#,##0.00",
-                FORMAT_STRING = "$#,##0.00",
+                FORMAT_STRING = "#,##0.00",
+                FORMAT_STRING = "#,##0.00",
                 [$member_scope] = 'CUBE',
                 MEMBER_ORDINAL = 6
                 MEMBER [Measures].[Measures].[Profit last Period]
                 AS 'COALESCEEMPTY((Measures.[Profit], [Time].[Time].PREVMEMBER),    Measures.[Profit])',
-                FORMAT_STRING = "$#,##0.00",
-                FORMAT_STRING = "$#,##0.00",
+                FORMAT_STRING = "#,##0.00",
+                FORMAT_STRING = "#,##0.00",
                 MEMBER_ORDINAL = 18,
                 [$member_scope] = 'CUBE'
                 MEMBER [Measures].[Measures].[Profit Growth]

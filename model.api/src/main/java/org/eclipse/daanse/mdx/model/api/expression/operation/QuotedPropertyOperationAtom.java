@@ -13,6 +13,8 @@
 */
 package org.eclipse.daanse.mdx.model.api.expression.operation;
 
+import java.util.Objects;
+
 /**
  * Defines a Quoted-Property-Operation.
  *
@@ -23,5 +25,9 @@ package org.eclipse.daanse.mdx.model.api.expression.operation;
  * </ul>
  */
 public record QuotedPropertyOperationAtom(String name) implements OperationAtom {
+
+    public QuotedPropertyOperationAtom {
+        Objects.requireNonNull(name, "name must not be null");
+    }
 
 }

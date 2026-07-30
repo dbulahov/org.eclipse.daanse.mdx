@@ -17,8 +17,8 @@ import org.eclipse.daanse.mdx.model.api.expression.MdxExpression;
 import org.eclipse.daanse.mdx.model.api.expression.ObjectIdentifier;
 import org.eclipse.daanse.mdx.model.api.select.MemberPropertyDefinition;
 
-public record MemberPropertyDefinitionR(ObjectIdentifier objectIdentifier,
-                                        MdxExpression expression)
+public record MemberPropertyDefinitionR(MdxExpression expression,
+                                        ObjectIdentifier objectIdentifier)
         implements MemberPropertyDefinition {
 
 }

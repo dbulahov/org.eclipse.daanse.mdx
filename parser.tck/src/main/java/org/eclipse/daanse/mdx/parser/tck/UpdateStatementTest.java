@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2023 Contributors to the Eclipse Foundation.
- *
- * This program and the accompanying materials are made
- * available under the terms of the Eclipse Public License 2.0
- * which is available at https://www.eclipse.org/legal/epl-2.0/
- *
- * SPDX-License-Identifier: EPL-2.0
- *
- * Contributors:
- *   SmartCity Jena - initial
- *   Stefan Bischof (bipolis.org) - initial
- */
+* Copyright (c) 2023 Contributors to the Eclipse Foundation.
+*
+* This program and the accompanying materials are made
+* available under the terms of the Eclipse Public License 2.0
+* which is available at https://www.eclipse.org/legal/epl-2.0/
+*
+* SPDX-License-Identifier: EPL-2.0
+*
+* Contributors:
+*   SmartCity Jena - initial
+*   Stefan Bischof (bipolis.org) - initial
+*/
 package org.eclipse.daanse.mdx.parser.tck;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -58,8 +58,9 @@ class UpdateStatementTest {
         assertThat(callExpression.operationAtom()).isEqualTo(new ParenthesesOperationAtom());
         assertThat(callExpression.expressions()).hasSize(2);
         assertThat(updateClause2.allocation()).isEqualTo(Allocation.USE_WEIGHTED_ALLOCATION);
-        assertThat(updateClause2.weight()).isInstanceOf(NumericLiteral.class);
-        numericLiteral = (NumericLiteral) updateClause2.weight();
+        assertThat(updateClause2.weight()).isPresent();
+        assertThat(updateClause2.weight().get()).isInstanceOf(NumericLiteral.class);
+        numericLiteral = (NumericLiteral) updateClause2.weight().get();
         assertThat(numericLiteral.value()).isEqualTo(BigDecimal.valueOf(0.5));
     }
 
@@ -87,8 +88,9 @@ class UpdateStatementTest {
         assertThat(callExpression.operationAtom()).isEqualTo(new ParenthesesOperationAtom());
         assertThat(callExpression.expressions()).hasSize(2);
         assertThat(updateClause2.allocation()).isEqualTo(Allocation.USE_WEIGHTED_ALLOCATION);
-        assertThat(updateClause2.weight()).isInstanceOf(NumericLiteral.class);
-        numericLiteral = (NumericLiteral) updateClause2.weight();
+        assertThat(updateClause2.weight()).isPresent();
+        assertThat(updateClause2.weight().get()).isInstanceOf(NumericLiteral.class);
+        numericLiteral = (NumericLiteral) updateClause2.weight().get();
         assertThat(numericLiteral.value()).isEqualTo(BigDecimal.valueOf(0.5));
     }
 

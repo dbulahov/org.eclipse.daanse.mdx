@@ -47,7 +47,7 @@ class DrillthroughStatementTest {
                 .selectCubeClause();
         assertThat(selectCubeClauseName.cubeName().name()).isEqualTo("Adventure Works");
         assertThat(selectCubeClauseName.cubeName().quoting()).isEqualTo(ObjectIdentifier.Quoting.QUOTED);
-        assertThat(clause.returnItems()).isNull();
+        assertThat(clause.returnItems()).isEmpty();
     }
 
     @Test

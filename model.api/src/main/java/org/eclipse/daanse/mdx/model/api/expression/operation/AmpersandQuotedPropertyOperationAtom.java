@@ -13,6 +13,8 @@
 */
 package org.eclipse.daanse.mdx.model.api.expression.operation;
 
+import java.util.Objects;
+
 /**
  * Defines a Ampersand-Quoted-Property-Operation.
  *
@@ -23,5 +25,5 @@ package org.eclipse.daanse.mdx.model.api.expression.operation;
  * </ul>
  */
 public record AmpersandQuotedPropertyOperationAtom(String name) implements OperationAtom {
-
+// name can be null
 }

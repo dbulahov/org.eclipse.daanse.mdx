@@ -772,7 +772,7 @@ MemberPropertyDefinition parseMemberPropertyDefinition :
 }
   objectIdentifier = parseIdentifier < EQ > expression = parseExpression
   {
-    return new MemberPropertyDefinitionR(objectIdentifier,expression);
+    return new MemberPropertyDefinitionR(expression, objectIdentifier);
   }
 ;
 
@@ -1568,7 +1568,7 @@ UpdateClause updateClause :
   )?
 
   {
-    return new UpdateClauseR(t, v, a, w);
+    return new UpdateClauseR(t, v, a, Optional.ofNullable(w));
   }
 ;
 
@@ -1595,7 +1595,7 @@ DMVStatement parseDMVStatement :
           < WHERE > expression = parseExpression()
 )?
 {
-    return new DMVStatementR(columns, tableId, expression);
+    return new DMVStatementR(columns, tableId, Optional.ofNullable(expression));
 }
 ;
 
@@ -1637,7 +1637,7 @@ SelectQueryAxisClause parseSelectQueryAxisClause :
       }
       else
       {
-        axis = AxisR.createUnnamed(n);
+        axis = AxisR.create(n);
       }
     }
   |

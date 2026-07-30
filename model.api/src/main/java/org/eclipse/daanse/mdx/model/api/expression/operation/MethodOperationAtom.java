@@ -13,6 +13,8 @@
 */
 package org.eclipse.daanse.mdx.model.api.expression.operation;
 
+import java.util.Objects;
+
 /**
  * Defines a Method-Operation.
  *
@@ -23,5 +25,9 @@ package org.eclipse.daanse.mdx.model.api.expression.operation;
  * </ul>
  */
 public record MethodOperationAtom(String name) implements OperationAtom {
+
+    public MethodOperationAtom {
+        Objects.requireNonNull(name, "name must not be null");
+    }
 
 }

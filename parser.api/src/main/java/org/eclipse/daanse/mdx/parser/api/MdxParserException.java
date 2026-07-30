@@ -16,6 +16,8 @@ package org.eclipse.daanse.mdx.parser.api;
 public class MdxParserException extends Exception {
 
     private static final long serialVersionUID = 1L;
+    private int line;
+    private int column;
 
     @SuppressWarnings("unused")
     private MdxParserException() {
@@ -34,4 +36,12 @@ public class MdxParserException extends Exception {
         super(throwable);
     }
 
+    public MdxParserException(String message, Throwable throwable, int line, int column) {
+        super(message, throwable);
+        this.line = line;
+        this.column = column;
+    }
+
+    public int line() { return line; }
+    public int column() { return column; }
 }

@@ -23,7 +23,7 @@ public record AxisR(int ordinal, boolean named) implements Axis {
         }
     }
 
-    public static AxisR createUnnamed(int ordinal) {
+    public static AxisR create(int ordinal) {
 
         if (ordinal == -2) {
             return NONE;

@@ -21,7 +21,7 @@ import org.eclipse.daanse.mdx.parser.api.MdxParserProvider;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ServiceScope;
 
-@Component(scope = ServiceScope.SINGLETON, configurationPid = CCCMdxParserProvider.PID, service = MdxParserProvider.class)
+@Component(scope = ServiceScope.SINGLETON, property = { "parser.type=ccc" }, configurationPid = CCCMdxParserProvider.PID, service = MdxParserProvider.class)
 public class CCCMdxParserProvider implements MdxParserProvider {
 
     public static final String PID = "daanse.mdx.parser.ccc.CCCMdxParserProvider";

@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2023 Contributors to the Eclipse Foundation.
- *
- * This program and the accompanying materials are made
- * available under the terms of the Eclipse Public License 2.0
- * which is available at https://www.eclipse.org/legal/epl-2.0/
- *
- * SPDX-License-Identifier: EPL-2.0
- *
- * Contributors:
- *   SmartCity Jena - initial
- *   Stefan Bischof (bipolis.org) - initial
- */
+* Copyright (c) 2023 Contributors to the Eclipse Foundation.
+*
+* This program and the accompanying materials are made
+* available under the terms of the Eclipse Public License 2.0
+* which is available at https://www.eclipse.org/legal/epl-2.0/
+*
+* SPDX-License-Identifier: EPL-2.0
+*
+* Contributors:
+*   SmartCity Jena - initial
+*   Stefan Bischof (bipolis.org) - initial
+*/
 package org.eclipse.daanse.mdx.unparser.simple;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -42,6 +42,7 @@ import org.eclipse.daanse.mdx.model.record.select.AxisR;
 import org.eclipse.daanse.mdx.model.record.select.SelectQueryAxesClauseR;
 import org.eclipse.daanse.mdx.model.record.select.SelectQueryAxisClauseR;
 import org.eclipse.daanse.mdx.model.record.select.SelectCubeClauseNameR;
+import org.eclipse.daanse.mdx.model.record.select.SelectDimensionPropertyListClauseR;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -181,4 +182,14 @@ class SimpleUnparserAxisTest {
 
     }
 
+    @Test
+    void testAxisClauseWithDimensionProperties() {
+        SelectQueryAxisClause clause = new SelectQueryAxisClauseR(false,
+                new CompoundIdR(List.of(new NameObjectIdentifierR("Gender", Quoting.UNQUOTED))),
+                AxisR.COLUMNS_NAMED,
+                new SelectDimensionPropertyListClauseR(List.of(
+                    new CompoundIdR(List.of(new NameObjectIdentifierR("Name", Quoting.UNQUOTED))))));
+        assertThat(unparser.unparseSelectQueryAxisClause(clause)).asString()
+            .contains("DIMENSION").contains("PROPERTIES Name").contains(" ON COLUMNS");
+    }
 }

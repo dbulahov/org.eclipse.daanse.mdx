@@ -88,7 +88,7 @@ class UnparseParsedTest {
                         """;
 
     @org.junit.jupiter.api.Test
-    void testFullStatemenCccx(
+    void testFullStatementCccx(
             @InjectService(filter = "(component.name=org.eclipse.daanse.mdx.parser.cccx.CCCXMdxParserProvider)") MdxParserProvider mdxParserProvider,
             @InjectService UnParser unParser) throws MdxParserException {
 
@@ -99,7 +99,7 @@ class UnparseParsedTest {
     }
 
     @org.junit.jupiter.api.Test
-    void testFullStatemenCcc(
+    void testFullStatementCcc(
             @InjectService(filter = "(component.name=org.eclipse.daanse.mdx.parser.ccc.CCCMdxParserProvider)") MdxParserProvider mdxParserProvider,
             @InjectService UnParser unParser) throws MdxParserException {
 

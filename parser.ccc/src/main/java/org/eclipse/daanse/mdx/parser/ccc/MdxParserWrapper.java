@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2023 Contributors to the Eclipse Foundation.
- *
- * This program and the accompanying materials are made
- * available under the terms of the Eclipse Public License 2.0
- * which is available at https://www.eclipse.org/legal/epl-2.0/
- *
- * SPDX-License-Identifier: EPL-2.0
- *
- * Contributors:
- *   SmartCity Jena - initial
- *   Stefan Bischof (bipolis.org) - initial
- */
+* Copyright (c) 2023 Contributors to the Eclipse Foundation.
+*
+* This program and the accompanying materials are made
+* available under the terms of the Eclipse Public License 2.0
+* which is available at https://www.eclipse.org/legal/epl-2.0/
+*
+* SPDX-License-Identifier: EPL-2.0
+*
+* Contributors:
+*   SmartCity Jena - initial
+*   Stefan Bischof (bipolis.org) - initial
+*/
 package org.eclipse.daanse.mdx.parser.ccc;
 
 import java.util.List;
@@ -74,6 +74,9 @@ public class MdxParserWrapper implements org.eclipse.daanse.mdx.parser.api.MdxPa
             logger.debug("Successfully parsed MDX statement: {}", result.getClass().getSimpleName());
             return result;
 
+        } catch (ParseException pe) {
+            logger.error("Failed to parse MDX statement", pe);
+            throw new MdxParserException(pe.getMessage(), pe,  pe.getToken().getBeginLine(), pe.getToken().getBeginColumn());
         } catch (Exception e) {
             logger.error("Failed to parse MDX statement", e);
             throw new MdxParserException(e);
@@ -99,212 +102,98 @@ public class MdxParserWrapper implements org.eclipse.daanse.mdx.parser.api.MdxPa
 
     @Override
     public SelectQueryAsteriskClause parseSelectQueryAsteriskClause() throws MdxParserException {
-        try {
-            return delegate.parseSelectQueryAsteriskClause();
-
-        } catch (Exception e) {
-            throw new MdxParserException(e);
-        } finally {
-            dump();
-        }
-
+        return parse("Select Query Asterisk Clause", delegate::parseSelectQueryAsteriskClause);
     }
 
     @Override
     public SelectStatement parseSelectStatement() throws MdxParserException {
-        logger.debug("Parsing SELECT statement");
-        try {
-            SelectStatement result = delegate.parseSelectStatement();
-            logger.debug("Successfully parsed SELECT statement");
-            return result;
-
-        } catch (Exception e) {
-            logger.error("Failed to parse SELECT statement", e);
-            throw new MdxParserException(e);
-        } finally {
-            dump();
-        }
+        return parse("SELECT statement", delegate::parseSelectStatement);
     }
 
     @Override
     public SelectQueryAxesClause parseSelectQueryAxesClause() throws MdxParserException {
-        try {
-            return delegate.parseSelectQueryAxesClause();
-
-        } catch (Exception e) {
-            throw new MdxParserException(e);
-        } finally {
-            dump();
-        }
+        return parse("Select Query Axes Clause", delegate::parseSelectQueryAxesClause);
     }
 
     @Override
     public MdxExpression parseExpression() throws MdxParserException {
-        logger.debug("Parsing MDX expression");
-        try {
-            MdxExpression result = delegate.parseExpression();
-            logger.debug("Successfully parsed MDX expression: {}", result.getClass().getSimpleName());
-            return result;
-
-        } catch (Exception e) {
-            logger.error("Failed to parse MDX expression", e);
-            throw new MdxParserException(e);
-        } finally {
-            dump();
-        }
+        return parse("MDX expression", delegate::parseExpression);
     }
 
     @Override
     public SelectCubeClause parseSelectCubeClause() throws MdxParserException {
-        try {
-            return delegate.parseSelectCubeClause();
-
-        } catch (Exception e) {
-            throw new MdxParserException(e);
-        } finally {
-            dump();
-        }
+        return parse("Select Cube Clause", delegate::parseSelectCubeClause);
     }
 
     @Override
     public SelectWithClause parseSelectWithClause() throws MdxParserException {
-        try {
-            return delegate.parseSelectWithClause();
-
-        } catch (Exception e) {
-            throw new MdxParserException(e);
-        } finally {
-            dump();
-        }
+        return parse("Select With Clause", delegate::parseSelectWithClause);
     }
 
     @Override
     public SelectQueryAxisClause parseSelectQueryAxisClause() throws MdxParserException {
-        try {
-            return delegate.parseSelectQueryAxisClause();
-
-        } catch (Exception e) {
-            throw new MdxParserException(e);
-        } finally {
-            dump();
-        }
+        return parse("Select Query Axis Clause", delegate::parseSelectQueryAxisClause);
     }
 
     @Override
     public Optional<SelectSlicerAxisClause> parseSelectSlicerAxisClause() throws MdxParserException {
-        try {
-            return delegate.parseSelectSlicerAxisClause();
-
-        } catch (Exception e) {
-            throw new MdxParserException(e);
-        } finally {
-            dump();
-        }
+        return parse("Select Slicer Axis Clause", delegate::parseSelectSlicerAxisClause);
     }
 
     @Override
     public SelectCellPropertyListClause parseSelectCellPropertyListClause() throws MdxParserException {
-        try {
-            return delegate.parseSelectCellPropertyListClause();
-
-        } catch (Exception e) {
-            throw new MdxParserException(e);
-        } finally {
-            dump();
-        }
+        return parse("Select Cell Property List Clause", delegate::parseSelectCellPropertyListClause);
     }
 
     @Override
     public DrillthroughStatement parseDrillthroughStatement() throws MdxParserException {
-        try {
-            return delegate.parseDrillthroughStatement();
-
-        } catch (Exception e) {
-            throw new MdxParserException(e);
-        } finally {
-            dump();
-        }
+        return parse("Drillthrough Statement", delegate::parseDrillthroughStatement);
     }
 
     @Override
     public ExplainStatement parseExplainStatement() throws MdxParserException {
-        try {
-            return delegate.parseExplainStatement();
-
-        } catch (Exception e) {
-            throw new MdxParserException(e);
-        } finally {
-            dump();
-        }
+        return parse("Explain Statement", delegate::parseExplainStatement);
     }
 
     @Override
     public List<? extends ReturnItem> parseReturnItems() throws MdxParserException {
-        try {
-            return delegate.parseReturnItems();
-
-        } catch (Exception e) {
-            throw new MdxParserException(e);
-        } finally {
-            dump();
-        }
+        return parse("Return Items", delegate::parseReturnItems);
     }
 
     @Override
     public MemberPropertyDefinition parseMemberPropertyDefinition() throws MdxParserException {
-        try {
-            return delegate.parseMemberPropertyDefinition();
-
-        } catch (Exception e) {
-            throw new MdxParserException(e);
-        } finally {
-            dump();
-        }
+        return parse("Member Property Definition", delegate::parseMemberPropertyDefinition);
     }
 
     @Override
     public SelectDimensionPropertyListClause parseSelectDimensionPropertyListClause() throws MdxParserException {
-        try {
-            return delegate.parseSelectDimensionPropertyListClause();
-
-        } catch (Exception e) {
-            throw new MdxParserException(e);
-        } finally {
-            dump();
-        }
+        return parse("Select Dimension PropertyList Clause", delegate::parseSelectDimensionPropertyListClause);
     }
 
     @Override
     public RefreshStatement parseRefreshStatement() throws MdxParserException {
-        try {
-            return delegate.parseRefreshStatement();
-
-        } catch (Exception e) {
-            throw new MdxParserException(e);
-        } finally {
-            dump();
-        }
+        return parse("Refresh Statement", delegate::parseRefreshStatement);
     }
 
     @Override
     public UpdateStatement parseUpdateStatement() throws MdxParserException {
-        try {
-            return delegate.parseUpdateStatement();
-
-        } catch (Exception e) {
-            throw new MdxParserException(e);
-        } finally {
-            dump();
-        }
+        return parse("Update Statement", delegate::parseUpdateStatement);
     }
 
     @Override
     public DMVStatement parseDMVStatement() throws MdxParserException {
-        try {
-            return delegate.parseDMVStatement();
+        return parse("DMV Statement", delegate::parseDMVStatement);
+    }
 
+    private <T> T parse(String what, ParseAction<T> action) throws MdxParserException {
+        try {
+            logger.debug("Parsing SELECT statement");
+            T result = action.run();
+            logger.debug("Successfully parsed " + what);
+            return result;
         } catch (Exception e) {
-            throw new MdxParserException(e);
+            logger.error("Failed to parse  " + what, e);
+            throw new MdxParserException("Failed to parse " + what, e);
         } finally {
             dump();
         }

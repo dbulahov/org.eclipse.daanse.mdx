@@ -80,7 +80,7 @@ INJECT DrillthroughStatement :
 
    public List<ReturnItem> returnItems() {
       List<ReturnItem> result = childrenOfType(ReturnItem.class);
-      return result.isEmpty() ? null : result;
+      return result;
    }
 }
 
@@ -199,10 +199,10 @@ INJECT UpdateClause :
           throw new IllegalStateException("Allocation parsing error");
     }
 
-    public org.eclipse.daanse.mdx.model.api.expression.MdxExpression weight() {
+    public Optional<org.eclipse.daanse.mdx.model.api.expression.MdxExpression> weight() {
           Node by = firstChildOfType(BY);
-                  return by == null ? null
-                                       : (org.eclipse.daanse.mdx.model.api.expression.MdxExpression) by.nextSibling();
+                  return by == null ? Optional.empty()
+                                       : Optional.of((org.eclipse.daanse.mdx.model.api.expression.MdxExpression) by.nextSibling());
     }
 }
 
@@ -236,10 +236,10 @@ INJECT DMVStatement :
        return (NameObjectIdentifier) firstChildOfType(DOT).nextSibling();
     }
 
-    public org.eclipse.daanse.mdx.model.api.expression.MdxExpression where() {
+    public Optional<org.eclipse.daanse.mdx.model.api.expression.MdxExpression> where() {
         Node where = firstChildOfType(WHERE);
-        return where == null ? null
-                             : (org.eclipse.daanse.mdx.model.api.expression.MdxExpression) where.nextSibling();
+        return where == null ? Optional.empty()
+                             :  Optional.of((org.eclipse.daanse.mdx.model.api.expression.MdxExpression) where.nextSibling());
     }
 }
 

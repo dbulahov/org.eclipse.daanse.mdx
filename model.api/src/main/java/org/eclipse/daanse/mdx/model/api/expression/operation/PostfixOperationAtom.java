@@ -13,6 +13,8 @@
 */
 package org.eclipse.daanse.mdx.model.api.expression.operation;
 
+import java.util.Objects;
+
 /**
  * Defines a Postfix-Operation.
  *
@@ -22,5 +24,9 @@ package org.eclipse.daanse.mdx.model.api.expression.operation;
  * </ul>
  */
 public record PostfixOperationAtom(String name) implements OperationAtom {
+
+    public PostfixOperationAtom {
+        Objects.requireNonNull(name, "name must not be null");
+    }
 
 }

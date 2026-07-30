@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2023 Contributors to the Eclipse Foundation.
- *
- * This program and the accompanying materials are made
- * available under the terms of the Eclipse Public License 2.0
- * which is available at https://www.eclipse.org/legal/epl-2.0/
- *
- * SPDX-License-Identifier: EPL-2.0
- *
- * Contributors:
- *   SmartCity Jena - initial
- *   Stefan Bischof (bipolis.org) - initial
- */
+* Copyright (c) 2023 Contributors to the Eclipse Foundation.
+*
+* This program and the accompanying materials are made
+* available under the terms of the Eclipse Public License 2.0
+* which is available at https://www.eclipse.org/legal/epl-2.0/
+*
+* SPDX-License-Identifier: EPL-2.0
+*
+* Contributors:
+*   SmartCity Jena - initial
+*   Stefan Bischof (bipolis.org) - initial
+*/
 package org.eclipse.daanse.mdx.parser.tck;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,7 +48,7 @@ class DMVStatementTest {
         assertThat(clause.table()).isNotNull();
         assertThat(clause.table().name()).isEqualTo("tableName");
         assertThat(clause.table().quoting()).isEqualTo(ObjectIdentifier.Quoting.UNQUOTED);
-        assertThat(clause.where()).isNull();
+        assertThat(clause.where()).isNotPresent();
     }
 
     @Test
@@ -65,8 +65,9 @@ class DMVStatementTest {
         assertThat(clause.table()).isNotNull();
         assertThat(clause.table().name()).isEqualTo("tableName");
         assertThat(clause.table().quoting()).isEqualTo(ObjectIdentifier.Quoting.UNQUOTED);
-        assertThat(clause.where()).isNotNull().isInstanceOf(CallExpression.class);
-        CallExpression callExpression = (CallExpression) clause.where();
+        assertThat(clause.where()).isNotNull().isPresent();
+        assertThat(clause.where().get()).isInstanceOf(CallExpression.class);
+        CallExpression callExpression = (CallExpression) clause.where().get();
         assertThat(callExpression.operationAtom()).isEqualTo(new InfixOperationAtom("="));
         assertThat(callExpression.expressions()).isNotNull().hasSize(2);
         assertThat(callExpression.expressions().get(0)).isNotNull().isInstanceOf(CompoundId.class);
@@ -98,8 +99,9 @@ class DMVStatementTest {
         assertThat(clause.table()).isNotNull();
         assertThat(clause.table().name()).isEqualTo("MDSCHEMA_CUBES");
         assertThat(clause.table().quoting()).isEqualTo(ObjectIdentifier.Quoting.UNQUOTED);
-        assertThat(clause.where()).isNotNull().isInstanceOf(CallExpression.class);
-        CallExpression callExpression = (CallExpression) clause.where();
+        assertThat(clause.where()).isNotNull().isPresent();
+        assertThat(clause.where().get()).isInstanceOf(CallExpression.class);
+        CallExpression callExpression = (CallExpression) clause.where().get();
         assertThat(callExpression.operationAtom()).isEqualTo(new InfixOperationAtom("="));
         assertThat(callExpression.expressions()).isNotNull().hasSize(2);
         assertThat(callExpression.expressions().get(0)).isNotNull().isInstanceOf(CompoundId.class);

@@ -1,19 +1,20 @@
 /*
- * Copyright (c) 2023 Contributors to the Eclipse Foundation.
- *
- * This program and the accompanying materials are made
- * available under the terms of the Eclipse Public License 2.0
- * which is available at https://www.eclipse.org/legal/epl-2.0/
- *
- * SPDX-License-Identifier: EPL-2.0
- *
- * Contributors:
- *   SmartCity Jena - initial
- *   Stefan Bischof (bipolis.org) - initial
- */
+* Copyright (c) 2023 Contributors to the Eclipse Foundation.
+*
+* This program and the accompanying materials are made
+* available under the terms of the Eclipse Public License 2.0
+* which is available at https://www.eclipse.org/legal/epl-2.0/
+*
+* SPDX-License-Identifier: EPL-2.0
+*
+* Contributors:
+*   SmartCity Jena - initial
+*   Stefan Bischof (bipolis.org) - initial
+*/
 package org.eclipse.daanse.mdx.unparser.simple;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -50,6 +51,7 @@ import org.eclipse.daanse.mdx.model.api.expression.operation.PlainPropertyOperat
 import org.eclipse.daanse.mdx.model.api.expression.operation.PostfixOperationAtom;
 import org.eclipse.daanse.mdx.model.api.expression.operation.PrefixOperationAtom;
 import org.eclipse.daanse.mdx.model.api.expression.operation.QuotedPropertyOperationAtom;
+import org.eclipse.daanse.mdx.model.api.select.Allocation;
 import org.eclipse.daanse.mdx.model.api.select.Axis;
 import org.eclipse.daanse.mdx.model.api.select.CreateCellCalculationBodyClause;
 import org.eclipse.daanse.mdx.model.api.select.CreateMemberBodyClause;
@@ -68,13 +70,14 @@ import org.eclipse.daanse.mdx.model.api.select.SelectQueryClause;
 import org.eclipse.daanse.mdx.model.api.select.SelectQueryEmptyClause;
 import org.eclipse.daanse.mdx.model.api.select.SelectSlicerAxisClause;
 import org.eclipse.daanse.mdx.model.api.select.SelectWithClause;
+import org.eclipse.daanse.mdx.model.api.select.UpdateClause;
 import org.eclipse.daanse.mdx.unparser.api.UnParser;
 import org.osgi.service.component.annotations.Component;
 
 @Component
 public class SimpleUnparser implements UnParser {
 
-    private static final String DELIMITER = "\r\n";
+    private static final String DELIMITER = System.lineSeparator();
 
 
     public CharSequence unparseSelectStatement(SelectStatement selectStatement) {
@@ -135,15 +138,10 @@ public class SimpleUnparser implements UnParser {
     }
 
     public CharSequence unparseSelectCubeClause(SelectCubeClause clause) {
-
-        if (clause instanceof SelectCubeClauseName sscn) {
-            return unparseSelectCubeClauseName(sscn);
-        }
-        if (clause instanceof SelectCubeClauseSubStatement sscs) {
-            return unparseSelectCubeClauseSubStatement(sscs);
-        }
-
-        return new StringBuilder();
+        return switch (clause) {
+            case SelectCubeClauseName s         -> unparseSelectCubeClauseName(s);
+            case SelectCubeClauseSubStatement s -> unparseSelectCubeClauseSubStatement(s);
+        };
     }
 
     public CharSequence unparseSelectCubeClauseSubStatement(SelectCubeClauseSubStatement clause) {
@@ -188,20 +186,11 @@ public class SimpleUnparser implements UnParser {
     }
 
     public CharSequence unparseSelectQueryClause(SelectQueryClause clause) {
-
-        if (clause instanceof SelectQueryAsteriskClause) {
-            return unparseSelectQueryAsteriskClause();
-        }
-        if (clause instanceof SelectQueryAxesClause sqaxc) {
-            return unparseSelectQueryAxesClause(sqaxc);
-
-        }
-        if (clause instanceof SelectQueryEmptyClause) {
-            return unparseSelectQueryEmptyClause();
-
-        }
-
-        return "";
+        return switch (clause) {
+        case SelectQueryAsteriskClause _ -> unparseSelectQueryAsteriskClause();
+        case SelectQueryAxesClause s     -> unparseSelectQueryAxesClause(s);
+        case SelectQueryEmptyClause _    -> unparseSelectQueryEmptyClause();
+        };
     }
 
     private CharSequence unparseSelectQueryEmptyClause() {
@@ -219,48 +208,34 @@ public class SimpleUnparser implements UnParser {
 
     public CharSequence unparseSelectQueryAxisClause(SelectQueryAxisClause clause) {
         StringBuilder sb = new StringBuilder();
-
         if (clause.nonEmpty()) {
-
             sb.append("NON EMPTY ");
         }
         sb.append(unparseExpression(clause.expression()));
+        if (clause.selectDimensionPropertyListClause() != null) {
+            sb.append(" ");
+            sb.append(unparseSelectDimensionPropertyListClause(clause.selectDimensionPropertyListClause()));
+        }
         sb.append(" ON ");
         sb.append(unparseAxis(clause.axis()));
-
         return sb;
     }
 
     public CharSequence unparseExpression(MdxExpression expression) {
 
-        if (expression instanceof CallExpression ce) {
-            return unparseCallExpression(ce);
-        }
-        if (expression instanceof Literal l) {
-            return unparseLiteral(l);
-        }
-        if (expression instanceof CompoundId cId) {
-            return unparseCompoundId(cId);
-        }
-        if (expression instanceof ObjectIdentifier oi) {
-            return unparseObjectIdentifier(oi);
-        }
-
-        return new StringBuilder();
+        return switch (expression) {
+            case CallExpression s   -> unparseCallExpression(s);
+            case Literal s          -> unparseLiteral(s);
+            case CompoundId s       -> unparseCompoundId(s);
+            case ObjectIdentifier s -> unparseObjectIdentifier(s);
+        };
     }
 
     private CharSequence unparseObjectIdentifier(ObjectIdentifier objectIdentifier) {
-
-        if (objectIdentifier instanceof KeyObjectIdentifier koi) {
-
-            return unparseKeyObjectIdentifier(koi);
-        }
-        if (objectIdentifier instanceof NameObjectIdentifier noi) {
-
-            return unparseNameObjectIdentifier(noi);
-
-        }
-        return "";
+        return switch (objectIdentifier) {
+            case KeyObjectIdentifier s   -> unparseKeyObjectIdentifier(s);
+            case NameObjectIdentifier s -> unparseNameObjectIdentifier(s);
+        };
     }
 
     private CharSequence unparseKeyObjectIdentifier(KeyObjectIdentifier koi) {
@@ -293,23 +268,12 @@ public class SimpleUnparser implements UnParser {
 
     private CharSequence unparseLiteral(Literal literal) {
 
-        if (literal instanceof NullLiteral) {
-            return unparseNullLiteral();
-        }
-        if (literal instanceof NumericLiteral numericLiteral) {
-            return unparseNumericLiteral(numericLiteral);
-
-        }
-        if (literal instanceof StringLiteral stringLiteral) {
-            return unparseStringLiteral(stringLiteral);
-
-        }
-        if (literal instanceof SymbolLiteral symbolLiteral) {
-            return unparseSymbolLiteral(symbolLiteral);
-
-        }
-
-        return "";
+        return switch (literal) {
+            case NullLiteral _    -> unparseNullLiteral();
+            case NumericLiteral s -> unparseNumericLiteral(s);
+            case StringLiteral s  -> unparseStringLiteral(s);
+            case SymbolLiteral s  -> unparseSymbolLiteral(s);
+        };
     }
 
     private CharSequence unparseSymbolLiteral(SymbolLiteral symbolLiteral) {
@@ -438,7 +402,7 @@ public class SimpleUnparser implements UnParser {
     }
 
     public CharSequence unparseCreateCellCalculationBodyClause(CreateCellCalculationBodyClause cccbc) {
-        //TODO
+        //TODO CreateCellCalculationBodyClause is not implemented in parser now
         return "";
 
     }
@@ -497,7 +461,7 @@ public class SimpleUnparser implements UnParser {
 
         sb.append(DELIMITER).append(" ").append(unparseSelectStatement(statement.selectStatement()));
 
-        if (statement.returnItems() != null && !statement.returnItems().isEmpty()) {
+        if (!statement.returnItems().isEmpty()) {
             sb.append(DELIMITER).append(" ").append(unparseReturnItems(statement.returnItems()));
         }
 
@@ -528,9 +492,7 @@ public class SimpleUnparser implements UnParser {
         sb.append("SELECT ").append(DELIMITER).append(" ");
         sb.append(unparseCompoundIds(statement.columns())).append(DELIMITER).append(" ");
         sb.append("FROM $SYSTEM.").append(unparseNameObjectIdentifier(statement.table()));
-        if (statement.where() != null) {
-            sb.append(DELIMITER).append(" ").append("WHERE ").append(unparseExpression(statement.where()));
-        }
+        statement.where().ifPresent(w -> sb.append(DELIMITER).append(" ").append("WHERE ").append(unparseExpression(w)));
         return sb;
     }
 
@@ -544,8 +506,24 @@ public class SimpleUnparser implements UnParser {
 
     public CharSequence unparseUpdateStatement(UpdateStatement updateStatement) {
         StringBuilder sb = new StringBuilder();
-        if (updateStatement.cubeName() != null) {
-            sb.append("UPDATE CUBE ").append(unparseNameObjectIdentifier(updateStatement.cubeName()));
+        sb.append("UPDATE CUBE ").append(unparseNameObjectIdentifier(updateStatement.cubeName()));
+        List<? extends UpdateClause> clauses = updateStatement.updateClauses();
+        if (!clauses.isEmpty()) {
+            sb.append(" SET ");
+            boolean first = true;
+            for (UpdateClause c : clauses) {
+                if (!first) {
+                    sb.append(", ");
+                }
+                first = false;
+                sb.append(unparseExpression(c.tupleExp()))
+                    .append(" = ")
+                    .append(unparseExpression(c.valueExp()));
+                if (c.allocation() != null && c.allocation() != Allocation.NO_ALLOCATION) {
+                    sb.append(" ").append(c.allocation().name());
+                    c.weight().ifPresent(w -> sb.append(" BY ").append(unparseExpression(w)));
+                }
+            }
         }
         return sb;
     }
@@ -563,25 +541,18 @@ public class SimpleUnparser implements UnParser {
 
     @Override
     public CharSequence unparseMdxStatement(MdxStatement mdxStatement) {
-
-        if (mdxStatement instanceof SelectStatement selectStatement) {
-            return unparseSelectStatement(selectStatement);
-        } else if (mdxStatement instanceof DrillthroughStatement drillthroughStatement) {
-            return unparseDrillthroughStatement(drillthroughStatement);
-        } else if (mdxStatement instanceof ExplainStatement explainStatement) {
-            return unparseExplainStatement(explainStatement);
-        } else if (mdxStatement instanceof DMVStatement dMVStatement) {
-            return unparseDMVStatement(dMVStatement);
-        } else if (mdxStatement instanceof RefreshStatement dMVStatement) {
-            return unparseRefreshStatement(dMVStatement);
-        } else if (mdxStatement instanceof UpdateStatement dMVStatement) {
-            return unparseUpdateStatement(dMVStatement);
-        }
-        return "";
+        return switch (mdxStatement) {
+            case SelectStatement s       -> unparseSelectStatement(s);
+            case DrillthroughStatement s -> unparseDrillthroughStatement(s);
+            case ExplainStatement s      -> unparseExplainStatement(s);
+            case DMVStatement s          -> unparseDMVStatement(s);
+            case RefreshStatement s      -> unparseRefreshStatement(s);
+            case UpdateStatement s       -> unparseUpdateStatement(s);
+        };
     }
 
     public CharSequence unparseAxis(Axis axis) {
-        return new StringBuilder().append(axis.named() ? axis.name().toUpperCase() : axis.ordinal());
+        return new StringBuilder().append(axis.named() ? axis.name().toUpperCase(Locale.ROOT) : axis.ordinal());
 
     }
 

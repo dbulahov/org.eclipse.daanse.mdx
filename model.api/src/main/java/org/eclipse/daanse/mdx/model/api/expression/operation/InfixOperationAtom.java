@@ -13,6 +13,8 @@
 */
 package org.eclipse.daanse.mdx.model.api.expression.operation;
 
+import java.util.Objects;
+
 /**
  * Defines a Infix-Operation.
  *
@@ -25,5 +27,10 @@ package org.eclipse.daanse.mdx.model.api.expression.operation;
  * </ul>
  */
 public record InfixOperationAtom(String name) implements OperationAtom {
+
+    public InfixOperationAtom {
+        Objects.requireNonNull(name, "name must not be null");
+    }
+
 
 }
