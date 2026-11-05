@@ -20,11 +20,12 @@ public record NameObjectIdentifierR(String name,
         implements NameObjectIdentifier {
 
     public NameObjectIdentifierR {
-        if (name == null || name.isEmpty()) {
-            throw new IllegalArgumentException("NameObjectIdentifier name should be not empty");
-        }
         if (!(quoting == Quoting.QUOTED || quoting == Quoting.UNQUOTED)) {
             throw new IllegalArgumentException("NameObjectIdentifier has wrong quoting. quoting should be QUOTED or UNQUOTED");
+        }
+        // [] and &[] are valid MDX (a member with a NULL or blank key); only an unquoted name needs a character
+        if (name == null || (name.isEmpty() && quoting == Quoting.UNQUOTED)) {
+            throw new IllegalArgumentException("NameObjectIdentifier name should be not empty");
         }
     }
 }
