@@ -461,6 +461,36 @@ class SimpleUnparserExpressionTest {
                     List.of(nameObjectIdentifier1, keyObjectIdentifier, nameObjectIdentifier3));
             assertThat(unparser.unparseExpression(compoundId)).asString().isEqualTo("[x].&foo&[1]&bar.[y]");
         }
+
+        /** [] and &[] name a member whose key is NULL or blank in Analysis Services; they are written back as read. */
+        @Test
+        void testEmptyBracketedNameIsWrittenBack() {
+            NameObjectIdentifier product = new NameObjectIdentifierR("Product", Quoting.QUOTED);
+            NameObjectIdentifier size = new NameObjectIdentifierR("Size", Quoting.QUOTED);
+            NameObjectIdentifier empty = new NameObjectIdentifierR("", Quoting.QUOTED);
+
+            assertThat(unparser.unparseExpression(new CompoundIdR(List.of(product, size, empty)))).asString()
+                    .isEqualTo("[Product].[Size].[]");
+
+            KeyObjectIdentifier emptyKey = new KeyObjectIdentifierR(List.of(empty));
+            assertThat(unparser.unparseExpression(new CompoundIdR(List.of(product, size, emptyKey)))).asString()
+                    .isEqualTo("[Product].[Size].&[]");
+
+            NameObjectIdentifier customer = new NameObjectIdentifierR("Customer", Quoting.QUOTED);
+            NameObjectIdentifier city = new NameObjectIdentifierR("City", Quoting.QUOTED);
+            KeyObjectIdentifier twoPartKey = new KeyObjectIdentifierR(
+                    List.of(empty, new NameObjectIdentifierR("HE", Quoting.QUOTED)));
+            assertThat(unparser.unparseExpression(new CompoundIdR(List.of(customer, city, twoPartKey)))).asString()
+                    .isEqualTo("[Customer].[City].&[]&[HE]");
+        }
+
+        /** An empty unquoted name cannot be written, so the model refuses it; null is refused for either quoting. */
+        @Test
+        void testEmptyUnquotedNameIsRefused() {
+            assertThatIllegalArgumentException().isThrownBy(() -> new NameObjectIdentifierR("", Quoting.UNQUOTED));
+            assertThatIllegalArgumentException().isThrownBy(() -> new NameObjectIdentifierR(null, Quoting.UNQUOTED));
+            assertThatIllegalArgumentException().isThrownBy(() -> new NameObjectIdentifierR(null, Quoting.QUOTED));
+        }
     }
 
 }
