@@ -18,9 +18,10 @@ import org.eclipse.daanse.mdx.model.api.expression.NameObjectIdentifier;
 /**
  * The cube a session statement names in its first segment: a cube by name, or
  * {@code CURRENTCUBE}. Whether {@code CURRENTCUBE} can be resolved is up to the
- * engine, not the parser.
+ * engine, not the parser. {@link Omitted} is the positional {@code CREATE <member> = <expression>} of a cube
+ * script, which writes no cube at all.
  */
-public sealed interface CubeReference permits CubeReference.Named, CubeReference.Current {
+public sealed interface CubeReference permits CubeReference.Named, CubeReference.Current, CubeReference.Omitted {
 
     /** A cube by name, e.g. {@code [Adventure Works]}. */
     record Named(NameObjectIdentifier name) implements CubeReference {
@@ -28,5 +29,12 @@ public sealed interface CubeReference permits CubeReference.Named, CubeReference
 
     /** {@code CURRENTCUBE}. */
     record Current() implements CubeReference {
+    }
+
+    /**
+     * No cube written: the positional {@code CREATE [Measures].[X] = <expression>} of a cube script. SSAS takes it
+     * only inside a cube script; as a session statement it is refused ("No cube specified").
+     */
+    record Omitted() implements CubeReference {
     }
 }
