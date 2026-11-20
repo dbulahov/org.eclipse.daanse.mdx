@@ -561,10 +561,23 @@ public class SimpleUnparser implements UnParser {
         StringBuilder sb = new StringBuilder();
         if (!returnItems.isEmpty()) {
             sb.append("RETURN ");
-            sb.append(returnItems.stream().map(r -> unparseCompoundId(r.compoundId())).map(Object::toString)
+            sb.append(returnItems.stream().map(this::unparseReturnItem).map(Object::toString)
                     .collect(Collectors.joining(",")));
         }
         return sb;
+    }
+
+    /** A bare column, or the column inside its function: Key([$Port].[Port], 2). */
+    public CharSequence unparseReturnItem(ReturnItem item) {
+        if (item.function().isEmpty()) {
+            return unparseCompoundId(item.compoundId());
+        }
+        StringBuilder sb = new StringBuilder(item.function().get()).append('(')
+                .append(unparseCompoundId(item.compoundId()));
+        for (MdxExpression argument : item.arguments()) {
+            sb.append(", ").append(unparseExpression(argument));
+        }
+        return sb.append(')');
     }
 
     public CharSequence unparseExplainStatement(ExplainStatement statement) {

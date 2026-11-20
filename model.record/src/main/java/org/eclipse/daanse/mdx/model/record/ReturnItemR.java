@@ -13,9 +13,24 @@
 */
 package org.eclipse.daanse.mdx.model.record;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
 import org.eclipse.daanse.mdx.model.api.ReturnItem;
 import org.eclipse.daanse.mdx.model.api.expression.CompoundId;
+import org.eclipse.daanse.mdx.model.api.expression.MdxExpression;
 
-public record ReturnItemR(CompoundId compoundId) implements ReturnItem {
+public record ReturnItemR(CompoundId compoundId, Optional<String> function, List<? extends MdxExpression> arguments)
+        implements ReturnItem {
 
+    public ReturnItemR {
+        Objects.requireNonNull(function, "function must not be null");
+        arguments = List.copyOf(arguments);
+    }
+
+    /** A bare column. */
+    public ReturnItemR(CompoundId compoundId) {
+        this(compoundId, Optional.empty(), List.of());
+    }
 }
