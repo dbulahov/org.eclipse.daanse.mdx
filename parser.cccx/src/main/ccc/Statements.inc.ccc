@@ -122,6 +122,9 @@ MdxStatement MdxStatement#interface :
     SCAN 0 {isWord(1, "DROP") && isWord(2, "SUBCUBE")} =>
     DropSubcubeStatement
     |
+    SCAN 0 {isWord(1, "CALL")} =>
+    CallStatement
+    |
     SCAN 0 {isWord(1, "DROP") && getToken(2).getType() == SET} =>
     DropSetStatement
     |
@@ -407,6 +410,33 @@ INJECT DropSubcubeStatement :
 DropSubcubeStatement :
   SCAN {isWord(1, "DROP") && isWord(2, "SUBCUBE")} => < ID > < ID >
   NameObjectIdentifier
+;
+
+// <callStatement> ::= CALL <procedure> [ ( <argument> [ , <argument> ]... ) ] [ ON <cubeName> ]
+// CALL is a word, not a token. The procedure is read as a primary expression: a.b.Proc(x) is the method Proc on a.b,
+// Proc(x) a function, a.b.Proc without parentheses a compound id. The older a!b!Proc(x) gives the same tree.
+
+INJECT CallStatement :
+   import java.util.Optional;
+   implements MdxStatement, org.eclipse.daanse.mdx.model.api.CallStatement;
+{
+   public org.eclipse.daanse.mdx.model.api.expression.MdxExpression procedure() {
+      return (org.eclipse.daanse.mdx.model.api.expression.MdxExpression) get(1);
+   }
+
+   public Optional<org.eclipse.daanse.mdx.model.api.expression.NameObjectIdentifier> cube() {
+      return firstChildOfType(ON) == null ? Optional.empty()
+          : Optional.of((org.eclipse.daanse.mdx.model.api.expression.NameObjectIdentifier) getLastChild());
+   }
+}
+
+// https://learn.microsoft.com/en-us/sql/mdx/mdx-data-manipulation-call
+CallStatement :
+  SCAN {isWord(1, "CALL")} => < ID >
+  PrimaryExpression
+  (
+    < ON > NameObjectIdentifier
+  )?
 ;
 
 INJECT DropMemberStatement :

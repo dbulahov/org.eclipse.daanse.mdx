@@ -391,6 +391,16 @@ PrimaryPrefix#void :
       CaseExpression
       |
       QualifiedIdentifier
+      {
+        // whiz!bang!foo: the qualifiers are kept, as in whiz.bang.foo
+        CompoundId qualified = new CompoundId();
+        peekNode().children().forEach(qualified::add);
+        if (getToken(1).getType() == LPAREN) {
+            pokeNode(org.eclipse.daanse.mdx.parser.cccx.MdxParserUtil.createMethodTarget(qualified, this.propertyWords));
+        } else {
+            pokeNode(org.eclipse.daanse.mdx.parser.cccx.MdxParserUtil.createCall(qualified, this.propertyWords));
+        }
+      }
       |
       CompoundId
       {
@@ -575,10 +585,9 @@ INJECT QualifiedIdentifier :
 QualifiedIdentifier :
    NameObjectIdentifier
    =>|+1
-      // We support the syntax for qualifying function names with package
-      // names separated by bang ('!'), e.g. 'whiz!bang!foo(a, b)'
-      // but currently we ignore the qualifiers. The previous example is
-      // equivalent to 'foo(a, b)'.
+      // Function names qualified with package names separated by bang ('!'),
+      // e.g. 'whiz!bang!foo(a, b)'. PrimaryPrefix turns it into the tree of
+      // 'whiz.bang.foo(a, b)': the method foo on whiz.bang.
    (<BANG> NameObjectIdentifier)+
 ;
 
