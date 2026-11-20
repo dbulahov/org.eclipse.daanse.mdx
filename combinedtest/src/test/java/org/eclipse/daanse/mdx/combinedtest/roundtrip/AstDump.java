@@ -80,7 +80,10 @@ final class AstDump {
                 + ")";
         case DrillthroughStatement s -> "(drillthrough maxrows=" + s.maxRows().map(String::valueOf).orElse("-")
                 + " firstrowset=" + s.firstRowSet().map(String::valueOf).orElse("-") + " "
-                + dump(s.selectStatement()) + " return=" + list(s.returnItems(), r -> dump(r.compoundId())) + ")";
+                + dump(s.selectStatement()) + " return=" + list(s.returnItems(), r -> r.function()
+                        .map(f -> "(" + f.toLowerCase(java.util.Locale.ROOT) + " " + dump(r.compoundId())
+                                + r.arguments().stream().map(a -> " " + dump(a)).collect(java.util.stream.Collectors.joining()) + ")")
+                        .orElseGet(() -> dump(r.compoundId()))) + ")";
         case ExplainStatement s -> "(explain " + dump(s.mdxStatement()) + ")";
         case RefreshStatement s -> "(refresh " + dump(s.cubeName()) + ")";
         case UpdateStatement s -> "(update " + dump(s.cubeName()) + " " + list(s.updateClauses(), AstDump::update)

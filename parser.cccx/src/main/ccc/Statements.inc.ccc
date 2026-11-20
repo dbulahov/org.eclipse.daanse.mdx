@@ -66,6 +66,19 @@ INJECT PARSER_CLASS :
   }
 
   /**
+   * A column of the RETURN list of DRILLTHROUGH is wrapped in a function when the i-th token ahead is one of the words
+   * below, unbracketed, and ( follows. The words stay names everywhere else.
+   */
+  private static final java.util.Set<String> RETURN_FUNCTIONS = java.util.Set.of(
+      "NAME", "UNIQUENAME", "KEY", "CAPTION", "MEMBERVALUE", "CUSTOMROLLUP", "CUSTOMROLLUPPROPERTIES", "UNARYOPERATOR");
+
+  private boolean isReturnFunction(int i) {
+    Token token = getToken(i);
+    return token.getType() == ID && getToken(i + 1).getType() == LPAREN
+        && RETURN_FUNCTIONS.contains(token.getImage().toUpperCase(java.util.Locale.ROOT));
+  }
+
+  /**
    * The positional CREATE of a cube script, CREATE <member> = <expression>, starts at the i-th token ahead: a
    * bracketed name, or an unbracketed one followed by . or =. CURRENTCUBE is left to the keyword form, the words of
    * the keyword form (SESSION, CALCULATED, HIDDEN, ...) are followed by neither . nor =.
@@ -783,12 +796,51 @@ SelectWithClause#interface :
 INJECT ReturnItem :
   implements org.eclipse.daanse.mdx.model.api.ReturnItem
 {
+   /** Wrapped: ID ( CompoundId [, argument]... ), bare: CompoundId. */
+   private boolean wrapped() {
+     return getFirstChild() instanceof Token;
+   }
+
    public CompoundId compoundId() {
-     return (CompoundId) getFirstChild();
+     return (CompoundId) (wrapped() ? get(2) : getFirstChild());
+   }
+
+   public java.util.Optional<String> function() {
+     return wrapped() ? java.util.Optional.of(getFirstChild().getImage()) : java.util.Optional.empty();
+   }
+
+   public java.util.List<org.eclipse.daanse.mdx.model.api.expression.MdxExpression> arguments() {
+     java.util.List<org.eclipse.daanse.mdx.model.api.expression.MdxExpression> result = new java.util.ArrayList<>();
+     if (wrapped()) {
+       for (int i = 3; i < size(); i++) {
+         if (get(i) instanceof org.eclipse.daanse.mdx.model.api.expression.MdxExpression argument) {
+           result.add(argument);
+         }
+       }
+     }
+     return result;
    }
 }
 
-ReturnItem : CompoundId ;
+// <returnItem> ::= <attribute>
+//                | <function> ( <attribute> [ , <expression> ]... )
+// <function>   ::= Name | UniqueName | Key | Caption | MemberValue | CustomRollup | CustomRollupProperties | UnaryOperator
+// https://learn.microsoft.com/en-us/sql/mdx/mdx-data-manipulation-drillthrough
+ReturnItem :
+  SCAN 0 {isReturnFunction(1)} =>
+  < ID > < LPAREN > CompoundId
+  (
+    < COMMA > Expression
+    {
+      if (peekNode() instanceof Expression expression) {
+        pokeNode(org.eclipse.daanse.mdx.parser.cccx.MdxParserUtil.getExpression(expression, this.propertyWords, getMaxNesting()));
+      }
+    }
+  )*
+  < RPAREN >
+|
+  CompoundId
+;
 
 INJECT CreateCellCalculationBodyClause :
    implements SelectWithClause, org.eclipse.daanse.mdx.model.api.select.CreateCellCalculationBodyClause

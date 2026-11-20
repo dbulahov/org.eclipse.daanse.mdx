@@ -181,6 +181,19 @@ private boolean isPositionalCreate(int i) {
 }
 
 /**
+ * A column of the RETURN list of DRILLTHROUGH is wrapped in a function when the i-th token ahead is one of the words
+ * below, unbracketed, and ( follows. The words stay names everywhere else.
+ */
+private static final Set<String> RETURN_FUNCTIONS = Set.of(
+    "NAME", "UNIQUENAME", "KEY", "CAPTION", "MEMBERVALUE", "CUSTOMROLLUP", "CUSTOMROLLUPPROPERTIES", "UNARYOPERATOR");
+
+private boolean isReturnFunction(int i) {
+    Token token = getToken(i);
+    return token.getType() == ID && getToken(i + 1).getType() == LPAREN
+            && RETURN_FUNCTIONS.contains(token.getImage().toUpperCase(java.util.Locale.ROOT));
+}
+
+/**
  * A single-quoted string after AS is the whole formula only when a clause boundary follows it; otherwise it merely
  * begins an expression, e.g. 'a' || 'b'.
  */
@@ -630,10 +643,31 @@ List < ReturnItem > parseReturnItems :
 ;
 
 
+// <returnItem> ::= <attribute>
+//                | <function> ( <attribute> [ , <expression> ]... )
+// <function>   ::= Name | UniqueName | Key | Caption | MemberValue | CustomRollup | CustomRollupProperties | UnaryOperator
+// https://learn.microsoft.com/en-us/sql/mdx/mdx-data-manipulation-drillthrough
 ReturnItem parseReturnItem :
 {
   CompoundId compoundId;
+  String function;
+  List<MdxExpression> arguments = new LinkedList<>();
+  MdxExpression argument;
 }
+  SCAN 0 {isReturnFunction(1)} =>
+  < ID > { function = getToken(0).getImage(); }
+  < LPAREN > compoundId = parseCompoundId
+  (
+    < COMMA > argument = parseExpression
+    {
+      arguments.add(argument);
+    }
+  )*
+  < RPAREN >
+  {
+    return new ReturnItemR(compoundId, Optional.of(function), arguments);
+  }
+|
   compoundId = parseCompoundId
   {
     return new ReturnItemR(compoundId);
