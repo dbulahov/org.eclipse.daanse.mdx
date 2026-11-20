@@ -20,6 +20,8 @@ import java.util.stream.Collectors;
 
 import org.eclipse.daanse.mdx.model.api.CreateMemberStatement;
 import org.eclipse.daanse.mdx.model.api.CreateSetStatement;
+import org.eclipse.daanse.mdx.model.api.CreateSubcubeStatement;
+import org.eclipse.daanse.mdx.model.api.DropSubcubeStatement;
 import org.eclipse.daanse.mdx.model.api.CubeReference;
 import org.eclipse.daanse.mdx.model.api.DrillthroughStatement;
 import org.eclipse.daanse.mdx.model.api.DropMemberStatement;
@@ -156,6 +158,9 @@ public class SimpleUnparser implements UnParser {
 
         Optional<SelectSlicerAxisClause> sOptional = clause.selectSlicerAxisClause();
 
+        if (clause.nonVisual()) {
+            sb.append(" NON VISUAL");
+        }
         sb.append(" ( ").append(DELIMITER);
         sb.append("  SELECT ").append(DELIMITER);
         sb.append(unparseSelectQueryClause(clause.selectQueryClause()));
@@ -512,6 +517,24 @@ public class SimpleUnparser implements UnParser {
         return new StringBuilder("DROP MEMBER ").append(unparseQualifiedNames(statement.names()));
     }
 
+    /** CREATE SUBCUBE name AS SELECT ..., or AS NON VISUAL (SELECT ...). */
+    public CharSequence unparseCreateSubcubeStatement(CreateSubcubeStatement statement) {
+        StringBuilder sb = new StringBuilder("CREATE SUBCUBE ").append(unparseNameObjectIdentifier(statement.cubeName()))
+                .append(" AS");
+        SelectCubeClauseSubStatement subcube = statement.subcube();
+        if (subcube.nonVisual()) {
+            return sb.append(unparseSelectCubeClauseSubStatement(subcube));
+        }
+        sb.append(" SELECT ").append(unparseSelectQueryClause(subcube.selectQueryClause())).append(" FROM ")
+                .append(unparseSelectCubeClause(subcube.selectCubeClause()));
+        subcube.selectSlicerAxisClause().ifPresent(w -> sb.append(' ').append(unparseSelectSlicerAxisClause(w)));
+        return sb;
+    }
+
+    public CharSequence unparseDropSubcubeStatement(DropSubcubeStatement statement) {
+        return new StringBuilder("DROP SUBCUBE ").append(unparseNameObjectIdentifier(statement.cubeName()));
+    }
+
     public CharSequence unparseDropSetStatement(DropSetStatement statement) {
         return new StringBuilder("DROP SET ").append(unparseQualifiedNames(statement.names()));
     }
@@ -649,6 +672,8 @@ public class SimpleUnparser implements UnParser {
             case CreateSetStatement s    -> unparseCreateSetStatement(s);
             case DropMemberStatement s   -> unparseDropMemberStatement(s);
             case DropSetStatement s      -> unparseDropSetStatement(s);
+            case CreateSubcubeStatement s -> unparseCreateSubcubeStatement(s);
+            case DropSubcubeStatement s  -> unparseDropSubcubeStatement(s);
         };
     }
 
