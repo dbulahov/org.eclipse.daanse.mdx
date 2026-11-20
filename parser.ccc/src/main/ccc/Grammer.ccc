@@ -48,6 +48,8 @@ import java.util.concurrent.CancellationException;
 
 import org.eclipse.daanse.mdx.model.api.CreateMemberStatement;
 import org.eclipse.daanse.mdx.model.api.CreateSetStatement;
+import org.eclipse.daanse.mdx.model.api.CreateSubcubeStatement;
+import org.eclipse.daanse.mdx.model.api.DropSubcubeStatement;
 import org.eclipse.daanse.mdx.model.api.CubeReference;
 import org.eclipse.daanse.mdx.model.api.DrillthroughStatement;
 import org.eclipse.daanse.mdx.model.api.DropMemberStatement;
@@ -91,6 +93,8 @@ import org.eclipse.daanse.mdx.model.api.select.SelectCubeClauseSubStatement;
 import org.eclipse.daanse.mdx.model.api.select.SelectWithClause;
 import org.eclipse.daanse.mdx.model.record.CreateMemberStatementR;
 import org.eclipse.daanse.mdx.model.record.CreateSetStatementR;
+import org.eclipse.daanse.mdx.model.record.CreateSubcubeStatementR;
+import org.eclipse.daanse.mdx.model.record.DropSubcubeStatementR;
 import org.eclipse.daanse.mdx.model.record.DrillthroughStatementR;
 import org.eclipse.daanse.mdx.model.record.DropMemberStatementR;
 import org.eclipse.daanse.mdx.model.record.DropSetStatementR;
@@ -561,8 +565,14 @@ MdxStatement parseMdxStatement :
     SCAN 0 {isWord(1, "CREATE") && (isCreateMember() || isPositionalCreate(2))} =>
     mdxStatement = parseCreateMemberStatement
     |
+    SCAN 0 {isWord(1, "CREATE") && isWord(2, "SUBCUBE")} =>
+    mdxStatement = parseCreateSubcubeStatement
+    |
     SCAN 0 {isWord(1, "CREATE")} =>
     mdxStatement = parseCreateSetStatement
+    |
+    SCAN 0 {isWord(1, "DROP") && isWord(2, "SUBCUBE")} =>
+    mdxStatement = parseDropSubcubeStatement
     |
     SCAN 0 {isWord(1, "DROP") && getToken(2).getType() == SET} =>
     mdxStatement = parseDropSetStatement
@@ -786,12 +796,18 @@ SelectCubeClauseName parseSelectCubeClauseName :
 ;
 
 
+// [ NON VISUAL ] ( SELECT ... ), VISUAL is a word, not a token
 SelectCubeClauseSubStatement parseSelectCubeClauseSubStatement :
 {
   SelectQueryClause selectQueryClause = null;
   SelectCubeClause SelectCubeClause = null;
   Optional<SelectSlicerAxisClause> selectSlicerAxisClause = Optional.empty();
+  boolean nonVisual = false;
 }
+  (
+    SCAN 0 {getToken(1).getType() == NON && isWord(2, "VISUAL")} =>
+    < NON > < ID > { nonVisual = true; }
+  )?
   (
     < LPAREN > < SELECT >
     (
@@ -809,7 +825,7 @@ SelectCubeClauseSubStatement parseSelectCubeClauseSubStatement :
     < RPAREN >
   )
   {
-    return new SelectCubeClauseSubStatementR(selectQueryClause, SelectCubeClause, selectSlicerAxisClause);
+    return new SelectCubeClauseSubStatementR(selectQueryClause, SelectCubeClause, selectSlicerAxisClause, nonVisual);
   }
 ;
 
@@ -1883,6 +1899,58 @@ CubeReference parseCubeReference :
   name = parseNameObjectIdentifier
   {
     return new CubeReference.Named(name);
+  }
+;
+
+// <createSubcubeStatement> ::= CREATE SUBCUBE <cubeName> AS ( <selectStatement> | NON VISUAL ( <selectStatement> ) )
+// <dropSubcubeStatement>   ::= DROP SUBCUBE <cubeName>
+// SUBCUBE and VISUAL are words, not tokens. The select is kept as a subselect; WITH, NON EMPTY, HAVING and the
+// properties are not read, as the reference does not allow them.
+// https://learn.microsoft.com/en-us/sql/mdx/mdx-data-definition-create-subcube
+CreateSubcubeStatement parseCreateSubcubeStatement :
+{
+  NameObjectIdentifier cubeName;
+  SelectCubeClauseSubStatement subcube;
+  SelectQueryClause selectQueryClause = null;
+  SelectCubeClause selectCubeClause;
+  Optional<SelectSlicerAxisClause> selectSlicerAxisClause = Optional.empty();
+}
+  SCAN {isWord(1, "CREATE") && isWord(2, "SUBCUBE")} => < ID > < ID >
+  cubeName = parseNameObjectIdentifier < AS >
+  (
+    subcube = parseSelectCubeClauseSubStatement
+  |
+    < SELECT >
+    (
+      selectQueryClause = parseSelectQueryAsteriskClause
+    |
+      selectQueryClause = parseSelectQueryAxesClause
+    )?
+    < FROM > selectCubeClause = parseSelectCubeClause
+    (
+      selectSlicerAxisClause = parseSelectSlicerAxisClause
+    )?
+    {
+      if (selectQueryClause == null) {
+        selectQueryClause = new SelectQueryEmptyClauseR();
+      }
+      subcube = new SelectCubeClauseSubStatementR(selectQueryClause, selectCubeClause, selectSlicerAxisClause, false);
+    }
+  )
+  {
+    return new CreateSubcubeStatementR(cubeName, subcube);
+  }
+;
+
+// https://learn.microsoft.com/en-us/sql/mdx/mdx-data-definition-drop-subcube
+DropSubcubeStatement parseDropSubcubeStatement :
+{
+  NameObjectIdentifier cubeName;
+}
+  SCAN {isWord(1, "DROP") && isWord(2, "SUBCUBE")} => < ID > < ID >
+  cubeName = parseNameObjectIdentifier
+  {
+    return new DropSubcubeStatementR(cubeName);
   }
 ;
 

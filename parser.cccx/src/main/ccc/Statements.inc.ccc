@@ -113,8 +113,14 @@ MdxStatement MdxStatement#interface :
     SCAN 0 {isWord(1, "CREATE") && (isCreateMember() || isPositionalCreate(2))} =>
     CreateMemberStatement
     |
+    SCAN 0 {isWord(1, "CREATE") && isWord(2, "SUBCUBE")} =>
+    CreateSubcubeStatement
+    |
     SCAN 0 {isWord(1, "CREATE")} =>
     CreateSetStatement
+    |
+    SCAN 0 {isWord(1, "DROP") && isWord(2, "SUBCUBE")} =>
+    DropSubcubeStatement
     |
     SCAN 0 {isWord(1, "DROP") && getToken(2).getType() == SET} =>
     DropSetStatement
@@ -346,6 +352,61 @@ CreateSetStatement :
   )?
   ( SCAN {isWord(1, "HIDDEN")} => < ID > )?
   < SET > NameObjectIdentifier < DOT > CreateSetBodyClause
+;
+
+// <createSubcubeStatement> ::= CREATE SUBCUBE <cubeName> AS ( <selectStatement> | NON VISUAL ( <selectStatement> ) )
+// <dropSubcubeStatement>   ::= DROP SUBCUBE <cubeName>
+// SUBCUBE and VISUAL are words, not tokens. The select is kept as a subselect (a SelectCubeClauseSubStatement node);
+// WITH, NON EMPTY, HAVING and the properties are not read, as the reference does not allow them.
+
+INJECT CreateSubcubeStatement :
+   implements MdxStatement, org.eclipse.daanse.mdx.model.api.CreateSubcubeStatement;
+{
+   public NameObjectIdentifier cubeName() {
+      return (NameObjectIdentifier) get(2);
+   }
+
+   public org.eclipse.daanse.mdx.model.api.select.SelectCubeClauseSubStatement subcube() {
+      return firstChildOfType(org.eclipse.daanse.mdx.model.api.select.SelectCubeClauseSubStatement.class);
+   }
+}
+
+// https://learn.microsoft.com/en-us/sql/mdx/mdx-data-definition-create-subcube
+CreateSubcubeStatement :
+  SCAN {isWord(1, "CREATE") && isWord(2, "SUBCUBE")} => < ID > < ID >
+  NameObjectIdentifier < AS >
+  (
+    SelectCubeClauseSubStatement
+  |
+    SubcubeSelect
+  )
+;
+
+// The select of CREATE SUBCUBE without parentheses; it builds a SelectCubeClauseSubStatement node.
+SubcubeSelect#SelectCubeClauseSubStatement :
+  < SELECT > { checkNesting(); }
+  (
+    SelectQueryClause
+  )?
+  < FROM >
+  SelectCubeClause
+  (
+    SelectSlicerAxisClause
+  )?
+;
+
+INJECT DropSubcubeStatement :
+   implements MdxStatement, org.eclipse.daanse.mdx.model.api.DropSubcubeStatement;
+{
+   public NameObjectIdentifier cubeName() {
+      return (NameObjectIdentifier) get(2);
+   }
+}
+
+// https://learn.microsoft.com/en-us/sql/mdx/mdx-data-definition-drop-subcube
+DropSubcubeStatement :
+  SCAN {isWord(1, "DROP") && isWord(2, "SUBCUBE")} => < ID > < ID >
+  NameObjectIdentifier
 ;
 
 INJECT DropMemberStatement :
@@ -664,9 +725,18 @@ INJECT SelectCubeClauseSubStatement :
     public Optional<SelectSlicerAxisClause> selectSlicerAxisClause() {
       return Optional.ofNullable(firstChildOfType(SelectSlicerAxisClause.class));
     }
+
+    public boolean nonVisual() {
+      return firstChildOfType(NON) != null;
+    }
 }
 
+// [ NON VISUAL ] ( SELECT ... ), VISUAL is a word, not a token
 SelectCubeClauseSubStatement :
+  (
+    SCAN 0 {getToken(1).getType() == NON && isWord(2, "VISUAL")} =>
+    < NON > < ID >
+  )?
   < LPAREN > { checkNesting(); }
   < SELECT >
   (

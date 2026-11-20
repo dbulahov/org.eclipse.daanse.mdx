@@ -20,6 +20,8 @@ import java.util.stream.Collectors;
 
 import org.eclipse.daanse.mdx.model.api.CreateMemberStatement;
 import org.eclipse.daanse.mdx.model.api.CreateSetStatement;
+import org.eclipse.daanse.mdx.model.api.CreateSubcubeStatement;
+import org.eclipse.daanse.mdx.model.api.DropSubcubeStatement;
 import org.eclipse.daanse.mdx.model.api.CubeReference;
 import org.eclipse.daanse.mdx.model.api.DrillthroughStatement;
 import org.eclipse.daanse.mdx.model.api.DropMemberStatement;
@@ -96,6 +98,8 @@ final class AstDump {
                 + with(s.body()) + ")";
         case DropMemberStatement s -> "(drop member " + list(s.names(), AstDump::name) + ")";
         case DropSetStatement s -> "(drop set " + list(s.names(), AstDump::name) + ")";
+        case CreateSubcubeStatement s -> "(create subcube " + dump(s.cubeName()) + " " + cube(s.subcube()) + ")";
+        case DropSubcubeStatement s -> "(drop subcube " + dump(s.cubeName()) + ")";
         };
     }
 
@@ -174,7 +178,7 @@ final class AstDump {
     private static String cube(SelectCubeClause clause) {
         return switch (clause) {
         case SelectCubeClauseName n -> dump(n.cubeName());
-        case SelectCubeClauseSubStatement s -> "(subselect query=" + query(s.selectQueryClause()) + " from="
+        case SelectCubeClauseSubStatement s -> "(subselect" + (s.nonVisual() ? " nonvisual" : "") + " query=" + query(s.selectQueryClause()) + " from="
                 + cube(s.selectCubeClause()) + " where="
                 + s.selectSlicerAxisClause().map(w -> dump(w.expression())).orElse("-") + ")";
         };

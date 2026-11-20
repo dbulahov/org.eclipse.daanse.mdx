@@ -23,4 +23,9 @@ public non-sealed interface SelectCubeClauseSubStatement extends SelectCubeClaus
 
     Optional<SelectSlicerAxisClause> selectSlicerAxisClause();
 
+    /** {@code NON VISUAL} was written before the parenthesis: totals are not narrowed to the subcube. */
+    default boolean nonVisual() {
+        return false;
+    }
+
 }

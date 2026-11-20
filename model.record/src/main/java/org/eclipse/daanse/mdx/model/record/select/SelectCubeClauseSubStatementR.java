@@ -22,7 +22,13 @@ import org.eclipse.daanse.mdx.model.api.select.SelectCubeClauseSubStatement;
 
 public record SelectCubeClauseSubStatementR(SelectQueryClause selectQueryClause,
                                             SelectCubeClause selectCubeClause,
-                                            Optional<SelectSlicerAxisClause> selectSlicerAxisClause)
+                                            Optional<SelectSlicerAxisClause> selectSlicerAxisClause,
+                                            boolean nonVisual)
         implements SelectCubeClauseSubStatement {
 
+    /** Without NON VISUAL. */
+    public SelectCubeClauseSubStatementR(SelectQueryClause selectQueryClause, SelectCubeClause selectCubeClause,
+            Optional<SelectSlicerAxisClause> selectSlicerAxisClause) {
+        this(selectQueryClause, selectCubeClause, selectSlicerAxisClause, false);
+    }
 }
