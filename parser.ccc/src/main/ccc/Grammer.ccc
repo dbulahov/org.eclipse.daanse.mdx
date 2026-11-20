@@ -49,6 +49,7 @@ import java.util.concurrent.CancellationException;
 import org.eclipse.daanse.mdx.model.api.CreateMemberStatement;
 import org.eclipse.daanse.mdx.model.api.CreateSetStatement;
 import org.eclipse.daanse.mdx.model.api.CreateSubcubeStatement;
+import org.eclipse.daanse.mdx.model.api.CallStatement;
 import org.eclipse.daanse.mdx.model.api.DropSubcubeStatement;
 import org.eclipse.daanse.mdx.model.api.CubeReference;
 import org.eclipse.daanse.mdx.model.api.DrillthroughStatement;
@@ -94,6 +95,7 @@ import org.eclipse.daanse.mdx.model.api.select.SelectWithClause;
 import org.eclipse.daanse.mdx.model.record.CreateMemberStatementR;
 import org.eclipse.daanse.mdx.model.record.CreateSetStatementR;
 import org.eclipse.daanse.mdx.model.record.CreateSubcubeStatementR;
+import org.eclipse.daanse.mdx.model.record.CallStatementR;
 import org.eclipse.daanse.mdx.model.record.DropSubcubeStatementR;
 import org.eclipse.daanse.mdx.model.record.DrillthroughStatementR;
 import org.eclipse.daanse.mdx.model.record.DropMemberStatementR;
@@ -573,6 +575,9 @@ MdxStatement parseMdxStatement :
     |
     SCAN 0 {isWord(1, "DROP") && isWord(2, "SUBCUBE")} =>
     mdxStatement = parseDropSubcubeStatement
+    |
+    SCAN 0 {isWord(1, "CALL")} =>
+    mdxStatement = parseCallStatement
     |
     SCAN 0 {isWord(1, "DROP") && getToken(2).getType() == SET} =>
     mdxStatement = parseDropSetStatement
@@ -1574,6 +1579,7 @@ MdxExpression parseAtom :
   MdxExpression expression;
   NameObjectIdentifier nameObjectIdentifier;
   List < MdxExpression > expressions;
+  List < ObjectIdentifier > qualifiers = null;
 }
   < SINGLE_QUOTED_STRING >
   {
@@ -1631,15 +1637,17 @@ MdxExpression parseAtom :
 |
   // Function call "foo(a, b)" or "whiz!bang!foo(a, b)".
   // Properties "x.PROP" and methods "exp.meth(a)" are in primary().
+  // The qualifiers of whiz!bang!foo(a, b) are kept: it is the method foo on whiz.bang, as whiz.bang.foo(a, b) is.
   nameObjectIdentifier = parseNameObjectIdentifier
   (
-    < BANG > nameObjectIdentifier = parseNameObjectIdentifier
+    < BANG >
     {
-    // We support the syntax for qualifying function names with package
-    // names separated by bang ('!'), e.g. 'whiz!bang!foo(a, b)'
-    // but currently we ignore the qualifiers. The previous example is
-    // equivalent to 'foo(a, b)'.
+      if (qualifiers == null) {
+        qualifiers = new ArrayList<>();
+      }
+      qualifiers.add(nameObjectIdentifier);
     }
+    nameObjectIdentifier = parseNameObjectIdentifier
   )*
   (
     < LPAREN >
@@ -1658,7 +1666,8 @@ MdxExpression parseAtom :
     }
   )
   {
-    return MdxParserUtil.createCall(null, nameObjectIdentifier, expressions, this.propertyWords);
+    return MdxParserUtil.createCall(qualifiers == null ? null : new CompoundIdR(qualifiers), nameObjectIdentifier,
+        expressions, this.propertyWords);
   }
 ;
 
@@ -1951,6 +1960,25 @@ DropSubcubeStatement parseDropSubcubeStatement :
   cubeName = parseNameObjectIdentifier
   {
     return new DropSubcubeStatementR(cubeName);
+  }
+;
+
+// <callStatement> ::= CALL <procedure> [ ( <argument> [ , <argument> ]... ) ] [ ON <cubeName> ]
+// CALL is a word, not a token. The procedure is read as a primary expression: a.b.Proc(x) is the method Proc on a.b,
+// Proc(x) a function, a.b.Proc without parentheses a compound id. The older a!b!Proc(x) gives the same tree.
+// https://learn.microsoft.com/en-us/sql/mdx/mdx-data-manipulation-call
+CallStatement parseCallStatement :
+{
+  MdxExpression procedure;
+  NameObjectIdentifier cube = null;
+}
+  SCAN {isWord(1, "CALL")} => < ID >
+  procedure = parsePrimary
+  (
+    < ON > cube = parseNameObjectIdentifier
+  )?
+  {
+    return new CallStatementR(procedure, Optional.ofNullable(cube));
   }
 ;
 

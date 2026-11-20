@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import org.eclipse.daanse.mdx.model.api.CreateMemberStatement;
 import org.eclipse.daanse.mdx.model.api.CreateSetStatement;
 import org.eclipse.daanse.mdx.model.api.CreateSubcubeStatement;
+import org.eclipse.daanse.mdx.model.api.CallStatement;
 import org.eclipse.daanse.mdx.model.api.DropSubcubeStatement;
 import org.eclipse.daanse.mdx.model.api.CubeReference;
 import org.eclipse.daanse.mdx.model.api.DrillthroughStatement;
@@ -100,6 +101,7 @@ final class AstDump {
         case DropSetStatement s -> "(drop set " + list(s.names(), AstDump::name) + ")";
         case CreateSubcubeStatement s -> "(create subcube " + dump(s.cubeName()) + " " + cube(s.subcube()) + ")";
         case DropSubcubeStatement s -> "(drop subcube " + dump(s.cubeName()) + ")";
+        case CallStatement s -> "(call " + dump(s.procedure()) + " on=" + s.cube().map(c -> dump(c)).orElse("-") + ")";
         };
     }
 

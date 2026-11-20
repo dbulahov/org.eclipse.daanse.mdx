@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import org.eclipse.daanse.mdx.model.api.CreateMemberStatement;
 import org.eclipse.daanse.mdx.model.api.CreateSetStatement;
 import org.eclipse.daanse.mdx.model.api.CreateSubcubeStatement;
+import org.eclipse.daanse.mdx.model.api.CallStatement;
 import org.eclipse.daanse.mdx.model.api.DropSubcubeStatement;
 import org.eclipse.daanse.mdx.model.api.CubeReference;
 import org.eclipse.daanse.mdx.model.api.DrillthroughStatement;
@@ -531,6 +532,13 @@ public class SimpleUnparser implements UnParser {
         return sb;
     }
 
+    /** CALL procedure [ON cube] */
+    public CharSequence unparseCallStatement(CallStatement statement) {
+        StringBuilder sb = new StringBuilder("CALL ").append(unparseExpression(statement.procedure()));
+        statement.cube().ifPresent(c -> sb.append(" ON ").append(unparseNameObjectIdentifier(c)));
+        return sb;
+    }
+
     public CharSequence unparseDropSubcubeStatement(DropSubcubeStatement statement) {
         return new StringBuilder("DROP SUBCUBE ").append(unparseNameObjectIdentifier(statement.cubeName()));
     }
@@ -674,6 +682,7 @@ public class SimpleUnparser implements UnParser {
             case DropSetStatement s      -> unparseDropSetStatement(s);
             case CreateSubcubeStatement s -> unparseCreateSubcubeStatement(s);
             case DropSubcubeStatement s  -> unparseDropSubcubeStatement(s);
+            case CallStatement s         -> unparseCallStatement(s);
         };
     }
 
