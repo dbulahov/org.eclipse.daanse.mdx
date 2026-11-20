@@ -474,6 +474,15 @@ public class SimpleUnparser implements UnParser {
 
     public CharSequence unparseCreateMemberStatement(CreateMemberStatement statement) {
         StringBuilder sb = new StringBuilder("CREATE ");
+        if (statement.cube() instanceof CubeReference.Omitted) {
+            // the positional form of a cube script: CREATE <name> = <expression>
+            CreateMemberBodyClause body = statement.body();
+            sb.append(unparseCompoundId(body.compoundId())).append(" = ").append(unparseExpression(body.expression()));
+            for (MemberPropertyDefinition mpd : body.memberPropertyDefinitions()) {
+                sb.append(", ").append(unparseMemberPropertyDefinition(mpd));
+            }
+            return sb;
+        }
         if (statement.session()) {
             sb.append("SESSION ");
         }
@@ -516,6 +525,8 @@ public class SimpleUnparser implements UnParser {
     private CharSequence unparseCubeReference(CubeReference cube) {
         return switch (cube) {
             case CubeReference.Current c -> "CURRENTCUBE";
+            // only the positional CREATE has no cube, and it writes none
+            case CubeReference.Omitted o -> "";
             // unbracketed, a cube named CurrentCube would read back as the current cube
             case CubeReference.Named n when n.name().name().equalsIgnoreCase("CURRENTCUBE") ->
                 MdxEncoder.bracket(n.name().name());

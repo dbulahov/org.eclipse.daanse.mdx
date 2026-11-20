@@ -180,6 +180,7 @@ final class AstDump {
     private static String cube(CubeReference cube) {
         return switch (cube) {
         case CubeReference.Current _ -> "(currentcube)";
+        case CubeReference.Omitted _ -> "(nocube)";
         case CubeReference.Named n -> "(cube " + dump(n.name()) + ")";
         };
     }

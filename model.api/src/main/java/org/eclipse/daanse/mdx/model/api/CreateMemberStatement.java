@@ -23,6 +23,10 @@ import org.eclipse.daanse.mdx.model.api.select.CreateMemberBodyClause;
  * The first segment after {@code MEMBER} is always the cube, it is kept apart in
  * {@link #cube()}; {@link #body()} holds the member name without it, the
  * expression and the properties, as a {@code WITH MEMBER} does.
+ * <p>
+ * The positional form of a cube script, {@code CREATE Member_Name = Expression [, Property = Expression]...},
+ * writes no cube, no {@code MEMBER} and no {@code AS}: its {@link #cube()} is {@link CubeReference.Omitted} and the
+ * body holds the whole member name.
  */
 public non-sealed interface CreateMemberStatement extends MdxStatement {
 

@@ -64,6 +64,16 @@ class SimpleUnparserSessionStatementTest {
     }
 
     @Test
+    void createPositionalMemberOfACubeScript() {
+        var statement = new CreateMemberStatementR(false, false, new CubeReference.Omitted(),
+                new CreateMemberBodyClauseR(id("Measures", "X"), new NumericLiteralR(BigDecimal.ONE),
+                        List.of(new MemberPropertyDefinitionR(new NumericLiteralR(BigDecimal.ONE),
+                                new NameObjectIdentifierR("VISIBLE", Quoting.UNQUOTED)))));
+        assertThat(unparser.unparseMdxStatement(statement)).asString()
+                .isEqualTo("CREATE [Measures].[X] = 1, VISIBLE = 1");
+    }
+
+    @Test
     void createSessionCalculatedMemberWithProperty() {
         var statement = new CreateMemberStatementR(true, true, AW, new CreateMemberBodyClauseR(id("Measures", "X"),
                 new NumericLiteralR(BigDecimal.ONE),

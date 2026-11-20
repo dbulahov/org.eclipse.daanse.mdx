@@ -64,6 +64,23 @@ INJECT PARSER_CLASS :
     }
     return getToken(i).getType() == MEMBER;
   }
+
+  /**
+   * The positional CREATE of a cube script, CREATE <member> = <expression>, starts at the i-th token ahead: a
+   * bracketed name, or an unbracketed one followed by . or =. CURRENTCUBE is left to the keyword form, the words of
+   * the keyword form (SESSION, CALCULATED, HIDDEN, ...) are followed by neither . nor =.
+   */
+  private boolean isPositionalCreate(int i) {
+    TokenType type = getToken(i).getType();
+    if (type == QUOTED_ID) {
+      return true;
+    }
+    if (type != ID || isWord(i, "CURRENTCUBE")) {
+      return false;
+    }
+    TokenType next = getToken(i + 1).getType();
+    return next == DOT || next == EQ;
+  }
 }
 
 MdxStatement MdxStatement#interface :
@@ -80,7 +97,7 @@ MdxStatement MdxStatement#interface :
     |
     TransactionStatement
     |
-    SCAN 0 {isWord(1, "CREATE") && isCreateMember()} =>
+    SCAN 0 {isWord(1, "CREATE") && (isCreateMember() || isPositionalCreate(2))} =>
     CreateMemberStatement
     |
     SCAN 0 {isWord(1, "CREATE")} =>
@@ -229,6 +246,9 @@ TransactionStatement :
 // <qualifiedName>         ::= <cubeReference> . <compoundId>
 // <cubeReference>         ::= <identifier> | CURRENTCUBE
 //
+// The positional form of a cube script writes no cube, no MEMBER and no AS (CubeReference.Omitted):
+// <createMemberStatement> ::= CREATE <memberName> = <expression> [ , <identifier> = <expression> ]...
+//
 // CREATE, DROP, SESSION, CALCULATED, STATIC, DYNAMIC, HIDDEN and CURRENTCUBE are words, not tokens: they stay names
 // elsewhere. The cube is the NameObjectIdentifier right after MEMBER or SET.
 
@@ -246,7 +266,12 @@ INJECT CreateMemberStatement :
    }
 
    public org.eclipse.daanse.mdx.model.api.CubeReference cube() {
-      return cubeReference((NameObjectIdentifier) firstChildOfType(MEMBER).nextSibling());
+      Node member = firstChildOfType(MEMBER);
+      if (member == null) {
+         // the positional form of a cube script
+         return new org.eclipse.daanse.mdx.model.api.CubeReference.Omitted();
+      }
+      return cubeReference((NameObjectIdentifier) member.nextSibling());
    }
 
    public org.eclipse.daanse.mdx.model.api.select.CreateMemberBodyClause body() {
@@ -257,9 +282,14 @@ INJECT CreateMemberStatement :
 // https://learn.microsoft.com/en-us/sql/mdx/mdx-data-definition-create-member?view=sql-server-ver16
 CreateMemberStatement :
   SCAN {isWord(1, "CREATE")} => < ID >
-  ( SCAN {isWord(1, "SESSION")} => < ID > )?
-  ( SCAN {isWord(1, "CALCULATED")} => < ID > )?
-  < MEMBER > NameObjectIdentifier < DOT > CreateMemberBodyClause
+  (
+    SCAN 0 {isPositionalCreate(1)} =>
+    PositionalCreateMemberBodyClause
+  |
+    ( SCAN {isWord(1, "SESSION")} => < ID > )?
+    ( SCAN {isWord(1, "CALCULATED")} => < ID > )?
+    < MEMBER > NameObjectIdentifier < DOT > CreateMemberBodyClause
+  )
 ;
 
 INJECT CreateSetStatement :
@@ -795,6 +825,22 @@ INJECT CreateMemberBodyClause :
      return childrenOfType(MemberPropertyDefinition.class);
   }
 }
+
+// The body of the positional CREATE of a cube script: <memberName> = <expression> [ , <identifier> = <expression> ]...
+// It builds a CreateMemberBodyClause node, = stands where AS does.
+PositionalCreateMemberBodyClause#CreateMemberBodyClause :
+  CompoundId
+  < EQ >
+  Expression
+    {
+      if (peekNode() instanceof Expression expression) {
+        pokeNode(org.eclipse.daanse.mdx.parser.cccx.MdxParserUtil.getExpression(expression, this.propertyWords, getMaxNesting()));
+      }
+    }
+    (
+     < COMMA > MemberPropertyDefinition
+    )*
+;
 
 // https://learn.microsoft.com/en-us/sql/mdx/mdx-data-definition-create-member?view=sql-server-ver16
 CreateMemberBodyClause :
